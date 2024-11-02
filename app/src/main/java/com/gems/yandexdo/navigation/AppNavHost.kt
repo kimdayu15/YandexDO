@@ -18,8 +18,13 @@ fun AppNavHost(
         startDestination = startDestination
     ) {
         composable(NavigationItem.Main.route) {
-            MainScreen(navController)
+            MainScreen()
+        }
+
+        composable(NavigationItem.Task.route) {
+            MainScreen()
         }
 
     }
 }
+
