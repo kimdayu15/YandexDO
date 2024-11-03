@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.gems.yandexdo.screen.MainScreen
+import com.gems.yandexdo.screen.TaskScreen
 
 @Composable
 fun AppNavHost(
@@ -18,11 +19,11 @@ fun AppNavHost(
         startDestination = startDestination
     ) {
         composable(NavigationItem.Main.route) {
-            MainScreen()
+            MainScreen(navController)
         }
 
         composable(NavigationItem.Task.route) {
-            MainScreen()
+            TaskScreen()
         }
 
     }
