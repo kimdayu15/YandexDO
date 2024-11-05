@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -63,8 +64,9 @@ fun MainScreen(navController: NavHostController, repository: TodoItemsRepository
         val ic = if (visibleState) painterResource(id = R.drawable.ic_visibility) else painterResource(id = R.drawable.ic_no_visibility)
         
         val tasks = remember { mutableStateListOf<TodoItem>() }
-        tasks.addAll(repository.getTasks())
-
+        LaunchedEffect(Unit) {
+            tasks.addAll(repository.getTasks())
+        }
         Surface(
             modifier = Modifier
                 .fillMaxSize()
