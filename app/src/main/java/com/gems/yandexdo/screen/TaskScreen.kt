@@ -24,6 +24,7 @@ import com.gems.yandexdo.data.TodoItem
 import com.gems.yandexdo.data.TodoItemsRepository
 import com.gems.yandexdo.navigation.NavigationItem
 import com.gems.yandexdo.ui.theme.YandexDOTheme
+import java.text.SimpleDateFormat
 import java.util.*
 
 enum class Importance { NONE, LOW, HIGH }
@@ -31,14 +32,14 @@ enum class Importance { NONE, LOW, HIGH }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskScreen(navController: NavHostController) {
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.US)
     YandexDOTheme {
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
         var noteText by remember { mutableStateOf("") }
         var selectedDate by remember { mutableStateOf("") }
         var checked by remember { mutableStateOf(false) }
+        var selectedImportance by remember { mutableStateOf(Importance.NONE) } // Add variable for importance
         val item = TodoItemsRepository(LocalContext.current)
-
-
 
         Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
             TopAppBar(modifier = Modifier.padding(10.dp, 0.dp), title = {
@@ -52,16 +53,15 @@ fun TaskScreen(navController: NavHostController) {
                                     TodoItem(
                                         "1",
                                         noteText,
-                                        Importance.LOW.ordinal,
-                                        selectedDate.toLong(),
+                                        selectedImportance.ordinal,
+                                        dateFormat.parse(selectedDate)?.time,
                                         false,
-                                        selectedDate.toLong(),
-                                        selectedDate.toLong()
+                                        System.currentTimeMillis(),
+                                        System.currentTimeMillis()
                                     )
                                 )
                             }
-
-
+                            navController.navigate(NavigationItem.Main.route)
                         })
                 }
             }, navigationIcon = {
@@ -96,18 +96,29 @@ fun TaskScreen(navController: NavHostController) {
                 ) {
                     Text("Importance")
                     Card {
-                        val btnColor = ButtonDefaults.buttonColors(Color.Transparent)
+                        var btnColor = Color.Transparent
                         Row {
-                            Button(onClick = { }, colors = btnColor) {
+                            Button(
+                                onClick = {
+                                    selectedImportance = Importance.LOW
+                                    btnColor = Color.Red
+                                }, colors = ButtonDefaults.buttonColors(btnColor)
+                            ) {
                                 Image(
                                     painter = painterResource(R.drawable.ic_low),
                                     contentDescription = null
                                 )
                             }
-                            Button(onClick = {}, colors = btnColor) {
+                            Button(
+                                onClick = { selectedImportance = Importance.NONE },
+                                colors = ButtonDefaults.buttonColors(btnColor)
+                            ) {
                                 Text("NO", color = Color.Black)
                             }
-                            Button(onClick = {}, colors = btnColor) {
+                            Button(
+                                onClick = { selectedImportance = Importance.HIGH },
+                                colors = ButtonDefaults.buttonColors(btnColor)
+                            ) {
                                 Text("!!", color = Color.Gray, fontSize = 20.sp)
                             }
                         }
@@ -137,7 +148,6 @@ fun TaskScreen(navController: NavHostController) {
                     ) {
                         Column {
                             Text("Deadline")
-
 
                             if (selectedDate.isNotEmpty()) {
                                 Text(
@@ -185,11 +195,11 @@ fun TaskScreen(navController: NavHostController) {
 
                     }
                 }
-
             }
         }
     }
 }
+
 
 private fun showDatePickerDialog(
     context: android.content.Context, onDateSelected: (String) -> Unit

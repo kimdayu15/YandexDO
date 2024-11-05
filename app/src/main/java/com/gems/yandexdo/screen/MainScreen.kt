@@ -1,5 +1,6 @@
 package com.gems.yandexdo.screen
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,6 +21,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -27,13 +29,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,22 +49,21 @@ import androidx.navigation.compose.rememberNavController
 import com.gems.yandexdo.R
 import com.gems.yandexdo.navigation.NavigationItem
 import com.gems.yandexdo.ui.theme.YandexDOTheme
-
-
-
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextDecoration
+import com.gems.yandexdo.data.TodoItem
+import com.gems.yandexdo.data.TodoItemsRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(navController: NavHostController) {
+fun MainScreen(navController: NavHostController, repository: TodoItemsRepository) {
     YandexDOTheme {
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
         var visibleState by remember { mutableStateOf(true) }
         val ic = if (visibleState) painterResource(id = R.drawable.ic_visibility) else painterResource(id = R.drawable.ic_no_visibility)
-
-        val checkedStates = remember { mutableStateListOf(*Array(100) { false }) }
-
-        val done by remember { derivedStateOf { checkedStates.count { it } } }
-
+        
+        val tasks = remember { mutableStateListOf<TodoItem>() }
+        tasks.addAll(repository.getTasks())
 
         Surface(
             modifier = Modifier
@@ -87,21 +86,11 @@ fun MainScreen(navController: NavHostController) {
                                 }
                             ) {
                                 Column {
-                                    Text(
-                                        "Мои дела",
-                                        fontWeight = FontWeight.Bold,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        fontSize = if (scrollBehavior.state.collapsedFraction > 0.5f) {
-                                            24.sp
-                                        } else {
-                                            38.sp
-                                        }
-                                    )
+                                    Text("Мои дела", fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
 
                                     if (scrollBehavior.state.collapsedFraction < 0.5f) {
                                         Text(
-                                            text = "Done - $done",
+                                            text = "Done - ${tasks.count { it.isCompleted }}",
                                             fontSize = 20.sp,
                                             color = Color(0x4D000000)
                                         )
@@ -141,8 +130,8 @@ fun MainScreen(navController: NavHostController) {
                             .fillMaxWidth()
                             .padding(innerPadding)
                     ) {
-                        itemsIndexed(checkedStates) { index, isChecked ->
-                            EachTask(index, isChecked, checkedStates)
+                        items(tasks) { task ->
+                            EachTask(task, repository, tasks)
                         }
                     }
                 }
@@ -152,21 +141,53 @@ fun MainScreen(navController: NavHostController) {
 }
 
 @Composable
-fun EachTask(index: Int, isChecked: Boolean, checkedStates: SnapshotStateList<Boolean>) {
+fun EachTask(task: TodoItem, repository: TodoItemsRepository, tasks: MutableList<TodoItem>) {
+    val isChecked = remember { mutableStateOf(task.isCompleted) }
+
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
-            checked = isChecked,
-            onCheckedChange = { isChecked ->
-                checkedStates[index] = isChecked
+            checked = isChecked.value,
+            onCheckedChange = { checked ->
+                isChecked.value = checked
+                val updatedTask = task.copy(isCompleted = checked)
+                val index = tasks.indexOf(task)
+                if (index >= 0) {
+                    tasks[index] = updatedTask
+                    repository.updateTask(updatedTask)
+                }
             }
         )
-        Text(text = "Task $index")
+        Text(
+            text = task.text,
+            modifier = Modifier.padding(start = 8.dp),
+            style = LocalTextStyle.current.copy(
+                textDecoration = if (isChecked.value) TextDecoration.LineThrough else TextDecoration.None
+            ),
+            maxLines = 3
+        )
     }
 }
+
+
+
+
+
+
+class MockTodoItemsRepository(context: Context) : TodoItemsRepository(context) {
+    override fun getTasks(): List<TodoItem> {
+        return listOf(
+            TodoItem("1", "Sample Task 1", 1, 0L, false, System.currentTimeMillis(), System.currentTimeMillis()),
+            TodoItem("2", "Sample Task 2", 2, 0L, true, System.currentTimeMillis(), System.currentTimeMillis()),
+            TodoItem("3", "Sample Task 3", 0, 0L, false, System.currentTimeMillis(), System.currentTimeMillis())
+        )
+    }
+}
+
 
 
 
@@ -174,15 +195,17 @@ fun EachTask(index: Int, isChecked: Boolean, checkedStates: SnapshotStateList<Bo
 @Preview(showBackground = true)
 @Composable
 fun MainPreview() {
+    val mockRepository = MockTodoItemsRepository(context = LocalContext.current)
     YandexDOTheme {
-        MainScreen(navController = rememberNavController())
+        MainScreen(navController = rememberNavController(), repository = mockRepository)
     }
 }
 
 @Preview
 @Composable
 fun MainDarkPreview() {
+    val mockRepository = MockTodoItemsRepository(context = LocalContext.current)
     YandexDOTheme(darkTheme = true) {
-        MainScreen(navController = rememberNavController())
+        MainScreen(navController = rememberNavController(), repository = mockRepository)
     }
 }

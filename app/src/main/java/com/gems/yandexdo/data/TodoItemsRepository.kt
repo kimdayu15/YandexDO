@@ -1,16 +1,10 @@
 package com.gems.yandexdo.data
 
 import android.content.Context
-import android.content.SharedPreferences
 import com.gems.yandexdo.MySharedPreferences
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-
-
-
-class TodoItemsRepository(context: Context) {
-
+open class TodoItemsRepository(context: Context) {
     private val prefs = MySharedPreferences.getInstance(context)
 
     companion object {
@@ -18,17 +12,13 @@ class TodoItemsRepository(context: Context) {
     }
 
     fun saveTasks(tasks: List<TodoItem>) {
-        val jsonTasks = Json.encodeToString(tasks)
-        prefs.edit().putString(TASKS_KEY, jsonTasks).apply()
+        val jsonTasks = tasks.map { Json.encodeToString(TodoItem.serializer(), it) }.toSet()
+        prefs.edit().putStringSet(TASKS_KEY, jsonTasks).apply()
     }
 
-    fun getTasks(): List<TodoItem> {
-        val jsonTasks = prefs.getString(TASKS_KEY, null)
-        return if (jsonTasks != null) {
-            Json.decodeFromString(jsonTasks)
-        } else {
-            emptyList()
-        }
+    open fun getTasks(): List<TodoItem> {
+        val jsonTasks = prefs.getStringSet(TASKS_KEY, emptySet()).orEmpty()
+        return jsonTasks.map { Json.decodeFromString(TodoItem.serializer(), it) }
     }
 
     fun addTask(task: TodoItem) {

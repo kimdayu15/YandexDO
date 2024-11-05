@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    kotlin("plugin.serialization") version "1.5.31"
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 android {
@@ -51,9 +51,8 @@ android {
 }
 
 dependencies {
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
-    implementation("com.google.code.gson:gson:2.8.8")
+    implementation (libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.ui.tooling.preview)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.ktx)
