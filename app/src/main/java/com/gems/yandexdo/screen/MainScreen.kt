@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,6 +51,8 @@ import com.gems.yandexdo.navigation.NavigationItem
 import com.gems.yandexdo.ui.theme.YandexDOTheme
 
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavHostController) {
@@ -61,6 +64,7 @@ fun MainScreen(navController: NavHostController) {
         val checkedStates = remember { mutableStateListOf(*Array(100) { false }) }
 
         val done by remember { derivedStateOf { checkedStates.count { it } } }
+
 
         Surface(
             modifier = Modifier
@@ -84,16 +88,21 @@ fun MainScreen(navController: NavHostController) {
                             ) {
                                 Column {
                                     Text(
-                                        "Large Top App Bar",
+                                        "Мои дела",
                                         fontWeight = FontWeight.Bold,
                                         maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        overflow = TextOverflow.Ellipsis,
+                                        fontSize = if (scrollBehavior.state.collapsedFraction > 0.5f) {
+                                            24.sp
+                                        } else {
+                                            38.sp
+                                        }
                                     )
-                                    // Show "Done" count dynamically
+
                                     if (scrollBehavior.state.collapsedFraction < 0.5f) {
                                         Text(
                                             text = "Done - $done",
-                                            fontSize = 16.sp,
+                                            fontSize = 20.sp,
                                             color = Color(0x4D000000)
                                         )
                                     }
@@ -103,7 +112,7 @@ fun MainScreen(navController: NavHostController) {
                                 ) {
                                     Icon(
                                         painter = ic,
-                                        contentDescription = "Localized description",
+                                        contentDescription = "Visibility",
                                         tint = Color(0xFF007AFF)
                                     )
                                 }
@@ -133,24 +142,29 @@ fun MainScreen(navController: NavHostController) {
                             .padding(innerPadding)
                     ) {
                         itemsIndexed(checkedStates) { index, isChecked ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Start,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Checkbox(
-                                    checked = isChecked,
-                                    onCheckedChange = { isChecked ->
-                                        checkedStates[index] = isChecked
-                                    }
-                                )
-                                Text(text = "Task $index")
-                            }
+                            EachTask(index, isChecked, checkedStates)
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun EachTask(index: Int, isChecked: Boolean, checkedStates: SnapshotStateList<Boolean>) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(
+            checked = isChecked,
+            onCheckedChange = { isChecked ->
+                checkedStates[index] = isChecked
+            }
+        )
+        Text(text = "Task $index")
     }
 }
 

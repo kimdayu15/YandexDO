@@ -23,7 +23,7 @@ fun AppNavHost(
         }
 
         composable(NavigationItem.Task.route) {
-            TaskScreen()
+            TaskScreen(navController)
         }
 
     }
