@@ -5,11 +5,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -95,14 +97,25 @@ fun TaskScreen(navController: NavHostController) {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Importance")
-                    Card {
-                        var btnColor = Color.Transparent
+                    Card(modifier = Modifier.height(40.dp), shape = RoundedCornerShape(47)) {
+                        val oneSelected = remember { mutableStateOf(false) }
+                        val twoSelected = remember { mutableStateOf(false) }
+                        val threeSelected = remember { mutableStateOf(false) }
                         Row {
                             Button(
                                 onClick = {
                                     selectedImportance = Importance.LOW
-                                    btnColor = Color.Red
-                                }, colors = ButtonDefaults.buttonColors(btnColor)
+                                    oneSelected.value = true
+                                    twoSelected.value = false
+                                    threeSelected.value = false
+
+                                }, colors = ButtonDefaults.buttonColors(
+                                    if (oneSelected.value) {
+                                        Color.White
+                                    } else {
+                                        Color.Transparent
+                                    }
+                                )
                             ) {
                                 Image(
                                     painter = painterResource(R.drawable.ic_low),
@@ -110,16 +123,44 @@ fun TaskScreen(navController: NavHostController) {
                                 )
                             }
                             Button(
-                                onClick = { selectedImportance = Importance.NONE },
-                                colors = ButtonDefaults.buttonColors(btnColor)
+                                onClick = {
+                                    selectedImportance = Importance.NONE
+                                    oneSelected.value = false
+                                    twoSelected.value = true
+                                    threeSelected.value = false
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    if (twoSelected.value) {
+                                        Color.White
+                                    } else {
+                                        Color.Transparent
+                                    }
+                                )
                             ) {
                                 Text("NO", color = Color.Black)
                             }
                             Button(
-                                onClick = { selectedImportance = Importance.HIGH },
-                                colors = ButtonDefaults.buttonColors(btnColor)
+                                onClick = {
+                                    selectedImportance = Importance.HIGH
+                                    oneSelected.value = false
+                                    twoSelected.value = false
+                                    threeSelected.value = true
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    if (threeSelected.value) {
+                                        Color.White
+                                    } else {
+                                        Color.Transparent
+                                    }
+                                )
                             ) {
-                                Text("!!", color = Color.Gray, fontSize = 20.sp)
+                                Text(
+                                    "!!", color = if (threeSelected.value) {
+                                        Color.Red
+                                    } else {
+                                        Color.Gray
+                                    }, fontSize = 20.sp
+                                )
                             }
                         }
                     }
@@ -183,11 +224,22 @@ fun TaskScreen(navController: NavHostController) {
                     ) {
                         Image(
                             painter = painterResource(R.drawable.ic_delete),
-                            contentDescription = null
+                            contentDescription = null,
+                            colorFilter = ColorFilter.tint(
+                                if (noteText.isEmpty()) {
+                                    Color.Gray
+                                } else {
+                                    Color.Red
+                                }
+                            )
                         )
                         Text(
                             "Delete",
-                            color = Color.Red,
+                            color = if (noteText.isEmpty()) {
+                                Color.Gray
+                            } else {
+                                Color.Red
+                            },
                             fontSize = 17.sp,
                             modifier = Modifier.padding(10.dp, 0.dp),
                             fontWeight = FontWeight.Medium
