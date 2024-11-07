@@ -61,8 +61,9 @@ fun MainScreen(navController: NavHostController, repository: TodoItemsRepository
     YandexDOTheme {
         val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
         var visibleState by remember { mutableStateOf(true) }
-        val ic = if (visibleState) painterResource(id = R.drawable.ic_visibility) else painterResource(id = R.drawable.ic_no_visibility)
-        
+        val ic =
+            if (visibleState) painterResource(id = R.drawable.ic_visibility) else painterResource(id = R.drawable.ic_no_visibility)
+
         val tasks = remember { mutableStateListOf<TodoItem>() }
         LaunchedEffect(Unit) {
             tasks.addAll(repository.getTasks())
@@ -88,7 +89,12 @@ fun MainScreen(navController: NavHostController, repository: TodoItemsRepository
                                 }
                             ) {
                                 Column {
-                                    Text("Мои дела", fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    Text(
+                                        "Мои дела",
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
 
                                     if (scrollBehavior.state.collapsedFraction < 0.5f) {
                                         Text(
@@ -114,7 +120,7 @@ fun MainScreen(navController: NavHostController, repository: TodoItemsRepository
                 },
                 floatingActionButton = {
                     FloatingActionButton(
-                        onClick = { navController.navigate(NavigationItem.Task.route) },
+                        onClick = { navController.navigate(NavigationItem.TaskScreen.route) },
                         containerColor = MaterialTheme.colorScheme.primary,
                         shape = CircleShape
                     ) {
@@ -133,7 +139,7 @@ fun MainScreen(navController: NavHostController, repository: TodoItemsRepository
                             .padding(innerPadding)
                     ) {
                         items(tasks) { task ->
-                            EachTask(task, repository, tasks)
+                            EachTask(task, repository, tasks, navController)
                         }
                     }
                 }
@@ -143,7 +149,12 @@ fun MainScreen(navController: NavHostController, repository: TodoItemsRepository
 }
 
 @Composable
-fun EachTask(task: TodoItem, repository: TodoItemsRepository, tasks: MutableList<TodoItem>) {
+fun EachTask(
+    task: TodoItem,
+    repository: TodoItemsRepository,
+    tasks: MutableList<TodoItem>,
+    navController: NavHostController
+) {
     val isChecked = remember { mutableStateOf(task.isCompleted) }
 
     Row(
@@ -172,10 +183,14 @@ fun EachTask(task: TodoItem, repository: TodoItemsRepository, tasks: MutableList
             ),
             maxLines = 3
         )
+        IconButton(onClick = {
+            // Navigate to the task details screen and pass the task ID
+            navController.navigate("${NavigationItem.TaskScreen.route}/${task.id}")
+        }) {
+            Icon(painter = painterResource(R.drawable.ic_info), contentDescription = "Task Info")
+        }
     }
 }
-
-
 
 
 
@@ -183,15 +198,36 @@ fun EachTask(task: TodoItem, repository: TodoItemsRepository, tasks: MutableList
 class MockTodoItemsRepository(context: Context) : TodoItemsRepository(context) {
     override fun getTasks(): List<TodoItem> {
         return listOf(
-            TodoItem("1", "Sample Task 1", 1, 0L, false, System.currentTimeMillis(), System.currentTimeMillis()),
-            TodoItem("2", "Sample Task 2", 2, 0L, true, System.currentTimeMillis(), System.currentTimeMillis()),
-            TodoItem("3", "Sample Task 3", 0, 0L, false, System.currentTimeMillis(), System.currentTimeMillis())
+            TodoItem(
+                "1",
+                "Sample Task 1",
+                1,
+                0L,
+                false,
+                System.currentTimeMillis(),
+                System.currentTimeMillis()
+            ),
+            TodoItem(
+                "2",
+                "Sample Task 2",
+                2,
+                0L,
+                true,
+                System.currentTimeMillis(),
+                System.currentTimeMillis()
+            ),
+            TodoItem(
+                "3",
+                "Sample Task 3",
+                0,
+                0L,
+                false,
+                System.currentTimeMillis(),
+                System.currentTimeMillis()
+            )
         )
     }
 }
-
-
-
 
 
 @Preview(showBackground = true)

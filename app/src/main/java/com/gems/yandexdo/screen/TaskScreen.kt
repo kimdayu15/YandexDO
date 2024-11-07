@@ -20,7 +20,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.gems.yandexdo.R
 import com.gems.yandexdo.data.TodoItem
 import com.gems.yandexdo.data.TodoItemsRepository
@@ -33,15 +32,20 @@ enum class Importance { NONE, LOW, HIGH }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskScreen(navController: NavHostController) {
+fun TaskScreen(navController: NavHostController, taskId: String? = null, repository: TodoItemsRepository) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.US)
+
+
+    var noteText by remember { mutableStateOf( "") }
+    var selectedDate by remember { mutableStateOf("") }
+    var checked by remember { mutableStateOf(false) }
+    val item = TodoItemsRepository(LocalContext.current)
+    var selectedImportance by remember { mutableStateOf(Importance.NONE) }
+    val taskId = UUID.randomUUID().toString()
+
+
     YandexDOTheme {
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
-        var noteText by remember { mutableStateOf("") }
-        var selectedDate by remember { mutableStateOf("") }
-        var checked by remember { mutableStateOf(false) }
-        var selectedImportance by remember { mutableStateOf(Importance.NONE) } // Add variable for importance
-        val item = TodoItemsRepository(LocalContext.current)
 
         Scaffold(modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
             TopAppBar(modifier = Modifier.padding(10.dp, 0.dp), title = {
@@ -51,17 +55,20 @@ fun TaskScreen(navController: NavHostController) {
                     Text(text = "Save",
                         modifier = Modifier.clickable {
                             if (noteText.isNotEmpty()) {
-                                item.addTask(
-                                    TodoItem(
-                                        "1",
-                                        noteText,
-                                        selectedImportance.ordinal,
-                                        dateFormat.parse(selectedDate)?.time,
-                                        false,
-                                        System.currentTimeMillis(),
-                                        System.currentTimeMillis()
-                                    )
-                                )
+
+                                item.addTask(TodoItem(
+                                    taskId,
+                                    noteText,
+                                    selectedImportance.ordinal,
+                                    if (selectedDate.isNotEmpty()) {
+                                        dateFormat.parse(selectedDate)?.time
+                                    } else {
+                                        null
+                                    },
+                                    false,
+                                    System.currentTimeMillis(),
+                                    System.currentTimeMillis()
+                                ))
                             }
                             navController.navigate(NavigationItem.Main.route)
                         })
@@ -213,7 +220,9 @@ fun TaskScreen(navController: NavHostController) {
                 }
 
                 Button(
-                    onClick = {},
+                    onClick = {if (noteText.isNotEmpty()) {
+                        navController.navigate(NavigationItem.Main.route)
+                    }},
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(Color.Transparent)
                 ) {
@@ -270,18 +279,18 @@ private fun showDatePickerDialog(
     datePickerDialog.show()
 }
 
-@Preview(showBackground = true)
-@Composable
-fun TaskPreview() {
-    YandexDOTheme {
-        TaskScreen(rememberNavController())
-    }
-}
-
-@Preview
-@Composable
-fun TaskDarkPreview() {
-    YandexDOTheme(darkTheme = true) {
-        TaskScreen(rememberNavController())
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun TaskPreview() {
+//    YandexDOTheme {
+//        TaskScreen(rememberNavController(), taskId = "", repository = Res)
+//    }
+//}
+//
+//@Preview
+//@Composable
+//fun TaskDarkPreview() {
+//    YandexDOTheme(darkTheme = true) {
+//        TaskScreen(rememberNavController(), taskId, repository)
+//    }
+//}

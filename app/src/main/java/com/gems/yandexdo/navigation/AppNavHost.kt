@@ -11,7 +11,6 @@ import com.gems.yandexdo.screen.MainScreen
 import com.gems.yandexdo.screen.TaskScreen
 
 
-
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -23,12 +22,20 @@ fun AppNavHost(
         navController = navController,
         startDestination = startDestination
     ) {
+
         composable(NavigationItem.Main.route) {
             MainScreen(navController, repository)
         }
 
-        composable(NavigationItem.Task.route) {
-            TaskScreen(navController)
+        composable(NavigationItem.TaskScreen.route) {
+            TaskScreen(navController = navController, repository = repository)
+        }
+
+        composable("${NavigationItem.TaskScreen.route}/{taskId}") { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getString("taskId")
+            if (taskId != null) {
+                TaskScreen(navController = navController, repository = repository, taskId = taskId)
+            }
         }
 
     }
